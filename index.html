@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f6f2">
+  <meta name="description" content="単体重量・通勤総重量・推定体感負荷で比べる、軽く感じる通勤バッグのデジタルカタログ。">
+  <title>軽く感じる通勤バッグ</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="hero shell">
+    <p class="eyebrow">COMMUTE BAG CATALOG</p>
+    <h1>軽く感じる<br>通勤バッグ</h1>
+    <p class="lead">毎日の荷物を入れたときの「軽さ」で比較。<br>単体重量と、持ち方まで含めた推定体感負荷をシンプルに見比べます。</p>
+  </header>
+
+  <main>
+    <section class="catalog shell" aria-label="バッグ候補一覧">
+      <div id="catalog"></div>
+    </section>
+
+    <section class="comparison-section" id="comparison" aria-labelledby="comparison-title">
+      <div class="shell">
+        <p class="eyebrow">SUMMARY</p>
+        <h2 id="comparison-title">最後に、数字で比較</h2>
+        <p class="section-lead">体感負荷が軽い順。100が現在使用中のバッグです。</p>
+        <div id="loadChart" class="chart-block" aria-label="推定体感負荷の比較"></div>
+        <div id="weightChart" class="chart-block" aria-label="推定通勤総重量の比較"></div>
+      </div>
+    </section>
+
+    <section class="method-section shell" aria-labelledby="method-title">
+      <details class="method-details">
+        <summary id="method-title">体感負荷の考え方</summary>
+        <div class="method-body">
+          <p><strong>推定体感負荷</strong>は、現在使用中のバッグを100とした相対指数です。実際の重量をkg換算した値ではありません。</p>
+          <p>計算は「通勤総重量 ÷ 現在の通勤総重量 × 携行構造係数 × 100」。携行構造係数は、2本ハンドル・幅広ストラップ・斜め掛け・身体への密着性などを比較用に整理したヒューリスティックです。</p>
+          <p>固定荷物は2,147g（弁当687g、水筒850g、財布・ポーチ等610g）として算出。実際の体感は体格、服装、ストラップ長、荷物の位置、歩き方などで変わります。</p>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="footer shell">
+    <p>商品仕様・画像：各ブランド公式サイトを優先して参照。現在使用中の商品はWEAR掲載情報を参照。Hervé Chapelier 1028Nの単体重量のみ販売店実測値（約270g）を使用しています。</p>
+    <p>画像は各提供元のURLを直接表示しているため、提供元側の変更により表示できなくなる場合があります。</p>
+    <nav class="source-links" aria-label="情報源">
+      <a href="https://wear.jp/item/66671652/" target="_blank" rel="noopener noreferrer">OPAQUE.CLIP / WEAR</a>
+      <a href="https://www.honeys-onlineshop.com/shop/g/g277121856193/" target="_blank" rel="noopener noreferrer">Honeys</a>
+      <a href="https://coteetciel.jp/" target="_blank" rel="noopener noreferrer">côte&amp;ciel</a>
+      <a href="https://www.longchamp.com/jp/ja/" target="_blank" rel="noopener noreferrer">Longchamp</a>
+      <a href="https://store.hervechapelierjapon.com/products/1028n" target="_blank" rel="noopener noreferrer">Hervé Chapelier</a>
+      <a href="https://crosset.onward.co.jp/items/310_RUZ1042121A0013" target="_blank" rel="noopener noreferrer">russet / ONWARD</a>
+    </nav>
+  </footer>
+
+  <div class="lightbox" id="lightbox" hidden aria-modal="true" role="dialog" aria-label="商品画像を拡大表示">
+    <button class="lightbox-close" type="button" aria-label="閉じる">×</button>
+    <div class="lightbox-stage">
+      <img id="lightboxImage" alt="" draggable="false">
+    </div>
+    <p class="lightbox-hint">2本指で拡大できます</p>
+  </div>
+</body>
+</html>
