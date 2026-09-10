@@ -6,7 +6,7 @@
   const CURRENT_TOTAL_G = FIXED_LOAD_G + CURRENT_BAG_G;
 
   const urls = {
-    current: 'https://wear.jp/item/66617652/',
+    current: 'https://wear.jp/item/66671652/',
     honeys: 'https://www.honeys-onlineshop.com/shop/g/g277121856193/',
     hycoWoven: 'https://coteetciel.jp/products/hyco-s-woven-concrete',
     hycoCargo: 'https://coteetciel.jp/products/hyco-s-cargo-green',
@@ -46,7 +46,7 @@
     {
       id: 'hyco', group: '比較候補', brand: 'côte&ciel', title: 'HYCO S',
       carry: '斜め掛けで評価', good: '幅広ストラップで身体のラインに沿う設計。総重量が増えても体感負荷を下げやすい。',
-      concern: '柔らかい構造なので、弁当を立てたときの安定性は荷物配置の確認がおすすめ。',
+      concern: '柔らかい構造で公称奥行は薄め。弁当17×11×18cmを立てて収められるかは実物確認を推奨。',
       variants: [
         {
           name: 'Woven Concrete', weight: 700, factor: .75, factorLabel: '身体密着型の幅広クロスボディとして0.75。', url: urls.hycoWoven,
@@ -102,7 +102,7 @@
     {
       id: 'todd', group: '比較候補', brand: 'côte&ciel', title: 'Todd Satellite Black',
       carry: '肩掛けで評価', good: '430gで現在より60g軽量。ミニマルな見た目と17Lの容量を両立。',
-      concern: '肩掛け主体では、HYCO Sのような身体密着型クロスボディほど荷重分散は期待しにくい。',
+      concern: '肩掛け主体ではHYCO Sほど荷重分散しにくい。公式でマチ寸法が明示されていないため、弁当の安定性は実物確認を推奨。',
       variants: [{
         name: 'Satellite Black', weight: 430, factor: .97, factorLabel: '比較的幅のあるソフトな肩掛けトートとして0.97。', url: urls.todd,
         images: [
@@ -220,12 +220,17 @@
           thumb.setAttribute('aria-label', `${product.variants[item.variantIndex].name} ${item.imageIndex + 1}枚目`);
           thumb.setAttribute('aria-current', index === 0 ? 'true' : 'false');
           thumb.innerHTML = `<img src="${item.src}" alt="" loading="lazy" referrerpolicy="no-referrer">`;
-          thumb.addEventListener('click', () => switchImage(card, product, item, thumb));
+          thumb.addEventListener('click', () => {
+            switchImage(card, product, item, thumb);
+          });
           thumbRail.appendChild(thumb);
         });
       }
 
-      card.querySelector('.product-main-button').addEventListener('click', () => openLightbox(mainImg.src, mainImg.alt));
+      card.querySelector('.product-main-button').addEventListener('click', () => {
+        openLightbox(mainImg.src, mainImg.alt);
+      });
+
       root.appendChild(card);
     });
   }
@@ -260,8 +265,9 @@
     const rows = [];
     products.forEach((p) => {
       p.variants.forEach((v, i) => {
-        if (p.id === 'longchamp' && i > 0) return;
+        if (p.id === 'longchamp' && i > 0) return; // 色違いは重量・指数が同一
         rows.push({
+          id: `${p.id}-${i}`,
           label: p.id === 'hyco' ? `HYCO S / ${v.name}` : p.id === 'longchamp' ? 'Longchamp / ル プリアージュ L' : `${p.brand} / ${p.title}`,
           short: p.id === 'current' ? '現在使用中' : p.id === 'honeys' ? 'Honeys 軽量A4トート' : p.id === 'herve' ? 'Hervé 1028N' : p.id === 'todd' ? 'Todd Satellite' : p.id === 'russet' ? 'russet CE-1404' : undefined,
           load: loadIndex(v.weight, v.factor),
@@ -286,57 +292,115 @@
     weightRoot.innerHTML = `<h3 class="chart-title">推定通勤総重量</h3><p class="chart-caption">同じ並び順で、実際の重さも確認</p>` +
       items.map(x => barRow(x, x.total, maxWeight, (x.total / 1000).toFixed(2) + 'kg', 'weight')).join('');
 
-    requestAnimationFrame(() => document.querySelectorAll('.bar-fill').forEach((bar) => { bar.style.width = bar.dataset.width; }));
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.bar-fill').forEach((bar) => {
+        bar.style.width = bar.dataset.width;
+      });
+    });
   }
 
   function barRow(item, value, max, valueText, type) {
+    // ゼロ起点の棒グラフ。視覚差が過度に強調されないよう最大値を100%として表示。
     const width = Math.max(8, (value / max) * 100).toFixed(1) + '%';
-    return `<div class="bar-row${item.current ? ' is-current' : ''}" data-kind="${type}">
-      <div class="bar-meta"><span class="bar-label">${item.short || item.label}</span><strong class="bar-value">${valueText}</strong></div>
-      <div class="bar-track"><div class="bar-fill" data-width="${width}"></div></div>
-    </div>`;
+    return `
+      <div class="bar-row${item.current ? ' is-current' : ''}" data-kind="${type}">
+        <div class="bar-meta">
+          <span class="bar-label">${item.short || item.label}</span>
+          <strong class="bar-value">${valueText}</strong>
+        </div>
+        <div class="bar-track"><div class="bar-fill" data-width="${width}"></div></div>
+      </div>`;
   }
 
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightboxImage');
   const stage = lightbox.querySelector('.lightbox-stage');
-  let scale = 1, translateX = 0, translateY = 0, startDistance = 0, startScale = 1, startMid = null, startTranslate = null, lastTap = 0;
-  const applyTransform = () => { lightboxImg.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`; };
-  const resetTransform = () => { scale = 1; translateX = 0; translateY = 0; startDistance = 0; startMid = null; startTranslate = null; applyTransform(); };
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let startDistance = 0;
+  let startScale = 1;
+  let startMid = null;
+  let startTranslate = null;
+  let lastTap = 0;
+
+  function applyTransform() {
+    lightboxImg.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`;
+  }
+  function resetTransform() {
+    scale = 1; translateX = 0; translateY = 0; startDistance = 0; startMid = null; startTranslate = null; applyTransform();
+  }
   function openLightbox(src, alt) {
-    lightboxImg.src = src; lightboxImg.alt = alt || '商品画像'; lightbox.hidden = false; document.body.classList.add('lightbox-open'); resetTransform();
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || '商品画像';
+    lightbox.hidden = false;
+    document.body.classList.add('lightbox-open');
+    resetTransform();
     lightbox.querySelector('.lightbox-close').focus({ preventScroll: true });
   }
-  function closeLightbox() { lightbox.hidden = true; document.body.classList.remove('lightbox-open'); lightboxImg.removeAttribute('src'); resetTransform(); }
+  function closeLightbox() {
+    lightbox.hidden = true;
+    document.body.classList.remove('lightbox-open');
+    lightboxImg.removeAttribute('src');
+    resetTransform();
+  }
   lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
-  lightbox.addEventListener('click', (e) => { if (e.target === stage && scale === 1) closeLightbox(); });
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === stage && scale === 1) closeLightbox();
+  });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightbox.hidden) closeLightbox(); });
 
   const distance = (a, b) => Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
   const midpoint = (a, b) => ({ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 });
+
   stage.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
-      e.preventDefault(); startDistance = distance(e.touches[0], e.touches[1]); startScale = scale; startMid = midpoint(e.touches[0], e.touches[1]); startTranslate = { x: translateX, y: translateY };
+      e.preventDefault();
+      startDistance = distance(e.touches[0], e.touches[1]);
+      startScale = scale;
+      startMid = midpoint(e.touches[0], e.touches[1]);
+      startTranslate = { x: translateX, y: translateY };
     } else if (e.touches.length === 1 && scale > 1) {
-      startMid = { x: e.touches[0].clientX, y: e.touches[0].clientY }; startTranslate = { x: translateX, y: translateY };
+      startMid = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      startTranslate = { x: translateX, y: translateY };
     }
   }, { passive: false });
+
   stage.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && startDistance) {
       e.preventDefault();
-      scale = Math.min(4, Math.max(1, startScale * (distance(e.touches[0], e.touches[1]) / startDistance)));
-      const mid = midpoint(e.touches[0], e.touches[1]); translateX = startTranslate.x + (mid.x - startMid.x); translateY = startTranslate.y + (mid.y - startMid.y);
-      if (scale === 1) { translateX = 0; translateY = 0; } applyTransform();
+      const next = Math.min(4, Math.max(1, startScale * (distance(e.touches[0], e.touches[1]) / startDistance)));
+      const mid = midpoint(e.touches[0], e.touches[1]);
+      scale = next;
+      translateX = startTranslate.x + (mid.x - startMid.x);
+      translateY = startTranslate.y + (mid.y - startMid.y);
+      if (scale === 1) { translateX = 0; translateY = 0; }
+      applyTransform();
     } else if (e.touches.length === 1 && scale > 1 && startMid) {
-      e.preventDefault(); translateX = startTranslate.x + (e.touches[0].clientX - startMid.x); translateY = startTranslate.y + (e.touches[0].clientY - startMid.y); applyTransform();
+      e.preventDefault();
+      translateX = startTranslate.x + (e.touches[0].clientX - startMid.x);
+      translateY = startTranslate.y + (e.touches[0].clientY - startMid.y);
+      applyTransform();
     }
   }, { passive: false });
-  stage.addEventListener('touchend', (e) => { if (e.touches.length < 2) startDistance = 0; if (e.touches.length === 0) { startMid = null; startTranslate = null; } });
-  stage.addEventListener('dblclick', () => { if (scale > 1) resetTransform(); else { scale = 2; applyTransform(); } });
+
+  stage.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) startDistance = 0;
+    if (e.touches.length === 0) { startMid = null; startTranslate = null; }
+  });
+
+  stage.addEventListener('dblclick', () => {
+    if (scale > 1) resetTransform();
+    else { scale = 2; applyTransform(); }
+  });
   stage.addEventListener('touchend', (e) => {
     if (e.changedTouches.length !== 1 || e.touches.length !== 0) return;
     const now = Date.now();
-    if (now - lastTap < 300) { e.preventDefault(); if (scale > 1) resetTransform(); else { scale = 2; applyTransform(); } lastTap = 0; } else lastTap = now;
+    if (now - lastTap < 300) {
+      e.preventDefault();
+      if (scale > 1) resetTransform(); else { scale = 2; applyTransform(); }
+      lastTap = 0;
+    } else lastTap = now;
   }, { passive: false });
 
   renderCatalog();
