@@ -1,0 +1,63 @@
+name: Apply image feedback
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/patch-image-feedback.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Patch catalog image order and colors
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('app.js')
+          text = path.read_text(encoding='utf-8')
+
+          old_current = """        images: [
+          ['https://c.imgz.jp/228/71141228/71141228b_8_d_500.jpg', '肩掛けした現在使用中のOPAQUE.CLIP黒トート'],
+          ['https://c.imgz.jp/228/71141228/71141228_10011_d_500.jpg', 'OPAQUE.CLIP黒トートの着用イメージ']
+        ]"""
+          new_current = """        images: [
+          ['https://c.imgz.jp/228/71141228/71141228b_14_d_500.jpg', '現在使用中のOPAQUE.CLIP黒トート 商品単品'],
+          ['https://c.imgz.jp/228/71141228/71141228_10011_d_500.jpg', '現在使用中のOPAQUE.CLIP黒トート 着用イメージ']
+        ]"""
+
+          old_russet = """        images: [
+          ['https://crosset.onward.co.jp/img01/w_280.h_280/trim_ofcrs_itemd82df89020c711f08cf40242ac11000c.jpg?ts=202504240451', 'russet CE-1404-WEB Gray 商品画像']
+        ]"""
+          new_russet = """        images: [
+          ['https://contents.palcloset.jp/static/images/item/570338_2500844_2.jpg', 'russet CE-1404-WEB Gray 商品単品'],
+          ['https://contents.palcloset.jp/static/images/item/570338_2500844_19.jpg', 'russet CE-1404-WEB Gray 着用イメージ']
+        ]"""
+
+          if old_current not in text:
+              raise SystemExit('Current-bag image block was not found; aborting without modification.')
+          if old_russet not in text:
+              raise SystemExit('russet image block was not found; aborting without modification.')
+
+          text = text.replace(old_current, new_current, 1)
+          text = text.replace(old_russet, new_russet, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.js
+          git diff --cached --check
+          git commit -m "Fix product image order and russet Gray images"
+          git push
